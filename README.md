@@ -1,55 +1,70 @@
 # 🛠️ Chenhun's Dotfiles (macOS)
 
-这是我的个人配置文件自动化管理库。基于 **“原子化存储，软链接映射”** 的逻辑构建，旨在实现配置的云端同步与多机秒级部署。
+这是我的 macOS 配置仓库，使用 **软链接** 管理 `~/.config` 下的各类配置。
 
-## 🌟 核心工具链
+---
 
-- **Window Manager:** AeroSpace (Tiling WM)
-- **Status Bar:** Sketchybar (Shell Scripting)
-- **Terminal:** Kitty & iTerm2
-- **Code Editor:** Neovim (Optimized for Pwn & Python)
-- **Misc:** Lazygit, 010 Editor, Clash
+## 📦 使用方式
 
-## 🚀 脚本说明
-
-仓库内包含两个核心 Bash 脚本，用于处理配置的生命周期管理：
-
-### 1. `move.sh` (首次迁移脚本)
-
-**用途：** 将本地 `~/.config` 下的真实文件夹“搬家”到本仓库中，并在原位留下软链接。
-**逻辑：** `Check Existing` -> `Move to Repo` -> `Create Symbol Link`。
+### 1️⃣ 克隆仓库（固定位置）
 
 ```bash
-chmod +x move.sh
-./move.sh
-
+git clone <repo_url> ~/.myutils/dotfiles
 ```
 
-### 2. `setup.sh` (环境部署脚本)
+> 建议使用该路径，脚本默认按此路径工作。
 
-**用途：** 当你在新机器上 `git clone` 本库后，运行此脚本一键建立所有软链接。
-**逻辑：** `Confirm Paths` -> `Force Symlink`。
+---
+
+### 2️⃣ 一键部署配置
 
 ```bash
+cd ~/.myutils/dotfiles
 chmod +x setup.sh
 ./setup.sh
-
 ```
 
-## 📂 目录结构预览
+该脚本会为以下配置创建软链接：
+
+- nvim
+- aerospace
+- sketchybar
+- kitty
+- …
+
+---
+
+## 🔄 更新配置
+
+当仓库有更新时：
+
+```bash
+cd ~/.myutils/dotfiles
+git pull
+./setup.sh
+```
+
+ps:或者可以使用我setup.sh脚本的2选项。
+
+> 重复执行是安全的。
+
+---
+
+## 📂 目录结构
 
 ```text
-.
-├── move.sh           # 初始化迁移工具
-├── setup.sh          # 自动化部署工具
-├── nvim/             # Neovim 模块化配置 (Lua)
-├── aerospace/        # 窗口管理布局定义
-├── sketchybar/       # 顶部状态栏动态脚本
+dotfiles/
+├── setup.sh
+├── nvim/
+├── aerospace/
+├── sketchybar/
+├── kitty/
 └── ...
-
 ```
 
-## ⚠️ 安全与隐私
+---
 
-- **敏感数据：** 代理订阅链接、API Key 等隐私信息已通过 `.gitignore` 过滤，严禁上传至公开仓库。
-- **备份建议：** 脚本执行 `mv` 操作前请确保已对关键配置进行冷备份。
+## ⚠️ 注意事项
+
+- `setup.sh` 会在发现真实目录时先备份再创建软链接
+- 敏感信息已通过 `.gitignore` 排除
