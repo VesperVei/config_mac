@@ -148,6 +148,8 @@ keymap("n", "<leader>xt", "<cmd>Trouble todo toggle<CR>", {
 -- ======================
 -- Window Layout（窗口布局）
 -- ======================
+-- 强制加载maximizer插件
+require("lazy").load({ plugins = { "vim-maximizer" } })
 
 keymap("n", "<leader>sm", "<cmd>MaximizerToggle<CR>", {
 	desc = "最大化 / 还原当前窗口",
