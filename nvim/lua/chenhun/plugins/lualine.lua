@@ -3,7 +3,7 @@ return {
 	dependencies = { "nvim-tree/nvim-web-devicons" },
 	config = function()
 		local lualine = require("lualine")
-		local lazy_status = require("lazy.status") -- to configure lazy pending updates count
+		local lazy_status = require("lazy.status")
 
 		local colors = {
 			blue = "#65D1FF",
@@ -12,66 +12,72 @@ return {
 			yellow = "#FFDA7B",
 			red = "#FF4A4A",
 			fg = "#c3ccdc",
-			bg = "#112638",
-			inactive_bg = "#2c3043",
+			bg = "NONE",
 		}
 
 		local my_lualine_theme = {
 			normal = {
-				a = { bg = colors.blue, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
+				a = { bg = colors.blue, fg = "#011628", gui = "bold" },
+				b = { bg = "NONE", fg = colors.violet },
+				c = { bg = "NONE", fg = colors.fg },
 			},
 			insert = {
-				a = { bg = colors.green, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
+				a = { bg = colors.green, fg = "#011628", gui = "bold" },
 			},
 			visual = {
-				a = { bg = colors.violet, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
-			},
-			command = {
-				a = { bg = colors.yellow, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
-			},
-			replace = {
-				a = { bg = colors.red, fg = colors.bg, gui = "bold" },
-				b = { bg = colors.bg, fg = colors.fg },
-				c = { bg = colors.bg, fg = colors.fg },
-			},
-			inactive = {
-				a = { bg = colors.inactive_bg, fg = colors.semilightgray, gui = "bold" },
-				b = { bg = colors.inactive_bg, fg = colors.semilightgray },
-				c = { bg = colors.inactive_bg, fg = colors.semilightgray },
+				a = { bg = colors.violet, fg = "#011628", gui = "bold" },
 			},
 		}
 
-		-- configure lualine with modified theme
 		lualine.setup({
 			options = {
 				theme = my_lualine_theme,
+				component_separators = { left = "｜", right = "｜" },
+				section_separators = { left = "", right = "" },
+				globalstatus = true,
 			},
 			sections = {
-				-- ✅ 在左侧中间显示当前 Python 环境
+				lualine_a = {
+					{ "mode", separator = { left = "" }, right_padding = 2 },
+				},
+				lualine_b = {
+					{ "branch", icon = "", color = { fg = colors.violet, gui = "bold" } },
+					{ "diff", symbols = { added = " ", modified = " ", removed = " " } },
+				},
 				lualine_c = {
+					-- ✅ 左侧：仅在 Python 文件中显示虚拟环境
 					{
 						require("chenhun.core.python_venv").lualine_component,
-						color = { fg = "#458588", gui = "bold" }, -- 给它一个醒目的蓝色/绿色
+						color = { fg = colors.green, gui = "bold" },
+						cond = function()
+							return vim.bo.filetype == "python"
+						end,
 					},
-					{ "filename" }, -- 建议把文件名也放在这里
+					{
+						"filename",
+						file_status = true,
+						path = 1,
+						color = { fg = "#cbcb5a", gui = "italic" }, -- 你要求的绝对路径/文件名颜色
+					},
 				},
 				lualine_x = {
 					{
-						lazy_status.updates,
-						cond = lazy_status.has_updates,
-						color = { fg = "#ff9e64" },
+						"diagnostics",
+						symbols = { error = " ", warn = " ", info = " ", hint = "󰌵 " },
 					},
-					{ "encoding" },
-					{ "fileformat" },
-					{ "filetype" },
+					-- ✅ 右侧：自动适配“图标 + 语言名称”（如： json）
+					{
+						"filetype",
+						colored = true, -- 显示图标原本的颜色
+						icon_only = false, -- 同时显示文字
+						icon = { align = "left" },
+						color = { fg = colors.blue, gui = "bold" },
+					},
+					{ lazy_status.updates, cond = lazy_status.has_updates, color = { fg = "#ff9e64" } },
+				},
+				lualine_y = { "progress" },
+				lualine_z = {
+					{ "location", separator = { right = "" }, left_padding = 2 },
 				},
 			},
 		})
