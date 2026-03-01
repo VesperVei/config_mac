@@ -2,7 +2,7 @@
 set -e
 
 DOTFILES_DIR="$HOME/.myutils/dotfiles"
-CONFIGS=("nvim" "aerospace" "sketchybar" "kitty")
+CONFIGS=("nvim" "aerospace" "sketchybar" "kitty" "tmux")
 BACKUP_DIR="$HOME/.config/config_backup_$(date +%Y%m%d_%H%M%S)"
 
 print_menu() {
