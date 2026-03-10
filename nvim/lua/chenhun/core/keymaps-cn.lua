@@ -36,6 +36,19 @@ keymap("n", "<leader>ws", "<cmd>SessionSave<CR>", {
 })
 
 -- ======================
+-- Python Venv（Python 虚拟环境）
+-- ======================
+keymap("n", "<leader>pv", require("chenhun.core.python_venv").choose_venv, {
+	desc = "选择 Python 虚拟环境",
+})
+
+keymap("n", "<leader>pr", function()
+	require("chenhun.core.python_venv").set_venv(nil)
+end, {
+	desc = "退出当前 Python 虚拟环境",
+})
+
+-- ======================
 -- File Explorer（文件树）
 -- ======================
 
@@ -76,6 +89,25 @@ keymap("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", {
 
 keymap("n", "<leader>ft", "<cmd>TodoTelescope<cr>", {
 	desc = "查找待办事项（TODO）",
+})
+
+-- ======================
+-- Noice（消息与通知）
+-- ======================
+keymap("n", "<leader>nn", "<cmd>Noice<CR>", {
+	desc = "打开 Noice 面板",
+})
+
+keymap("n", "<leader>nl", "<cmd>Noice last<CR>", {
+	desc = "查看上一条 Noice 消息",
+})
+
+keymap("n", "<leader>na", "<cmd>Noice all<CR>", {
+	desc = "查看所有 Noice 消息",
+})
+
+keymap("n", "<leader>nd", "<cmd>Noice dismiss<CR>", {
+	desc = "清除 Noice 通知",
 })
 
 -- ======================
@@ -122,6 +154,17 @@ keymap("n", "<leader>lg", "<cmd>LazyGit<cr>", {
 })
 
 -- ======================
+-- ToggleTerm（终端）
+-- ======================
+keymap("n", "<leader>tt", "<cmd>ToggleTerm direction=float<CR>", {
+	desc = "切换浮动终端",
+})
+
+keymap("n", "<leader>th", "<cmd>ToggleTerm size=15 direction=horizontal<CR>", {
+	desc = "切换水平终端",
+})
+
+-- ======================
 -- Trouble（诊断面板）
 -- ======================
 
@@ -143,6 +186,116 @@ keymap("n", "<leader>xl", "<cmd>Trouble loclist toggle<CR>", {
 
 keymap("n", "<leader>xt", "<cmd>Trouble todo toggle<CR>", {
 	desc = "在 Trouble 中显示 TODO",
+})
+
+-- ======================
+-- Formatting / Lint（格式化与检查）
+-- ======================
+keymap({ "n", "v" }, "<leader>mp", function()
+	require("conform").format({
+		lsp_fallback = true,
+		async = false,
+		timeout_ms = 1000,
+	})
+end, {
+	desc = "格式化当前文件或所选内容",
+})
+
+keymap("n", "<leader>l", function()
+	require("lint").try_lint()
+end, {
+	desc = "立即运行当前文件的代码检查",
+})
+
+-- ======================
+-- GitSigns（Git 变更）
+-- ======================
+keymap("n", "]h", function()
+	require("gitsigns").next_hunk()
+end, {
+	desc = "跳转到下一个变更块",
+})
+
+keymap("n", "[h", function()
+	require("gitsigns").prev_hunk()
+end, {
+	desc = "跳转到上一个变更块",
+})
+
+keymap("n", "<leader>hs", function()
+	require("gitsigns").stage_hunk()
+end, {
+	desc = "暂存当前变更块",
+})
+
+keymap("n", "<leader>hr", function()
+	require("gitsigns").reset_hunk()
+end, {
+	desc = "撤销当前变更块",
+})
+
+keymap("v", "<leader>hs", function()
+	require("gitsigns").stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+end, {
+	desc = "暂存所选变更块",
+})
+
+keymap("v", "<leader>hr", function()
+	require("gitsigns").reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+end, {
+	desc = "撤销所选变更块",
+})
+
+keymap("n", "<leader>hS", function()
+	require("gitsigns").stage_buffer()
+end, {
+	desc = "暂存当前文件的所有变更",
+})
+
+keymap("n", "<leader>hR", function()
+	require("gitsigns").reset_buffer()
+end, {
+	desc = "撤销当前文件的所有变更",
+})
+
+keymap("n", "<leader>hu", function()
+	require("gitsigns").undo_stage_hunk()
+end, {
+	desc = "取消暂存当前变更块",
+})
+
+keymap("n", "<leader>hp", function()
+	require("gitsigns").preview_hunk()
+end, {
+	desc = "预览当前变更块",
+})
+
+keymap("n", "<leader>hb", function()
+	require("gitsigns").blame_line({ full = true })
+end, {
+	desc = "查看当前行的完整 Git 归属",
+})
+
+keymap("n", "<leader>hB", function()
+	require("gitsigns").toggle_current_line_blame()
+end, {
+	desc = "切换当前行 Git 归属显示",
+})
+
+keymap("n", "<leader>hd", function()
+	require("gitsigns").diffthis()
+end, {
+	desc = "对比当前文件变更",
+})
+
+keymap("n", "<leader>hD", function()
+	require("gitsigns").diffthis("~")
+end, {
+	desc = "对比当前文件与上一个版本的差异",
+})
+
+keymap({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", {
+	desc = "选择当前变更块",
 })
 
 -- ======================
