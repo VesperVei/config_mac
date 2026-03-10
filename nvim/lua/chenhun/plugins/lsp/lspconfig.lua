@@ -46,6 +46,23 @@ return {
 			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
 		end
 
+		-- 像 VSCode 一样在行尾显示诊断信息（LSP 与 nvim-lint 共用）
+		vim.diagnostic.config({
+			virtual_text = {
+				spacing = 2,
+				source = "if_many",
+				prefix = "●",
+			},
+			signs = true,
+			underline = true,
+			update_in_insert = false,
+			severity_sort = true,
+			float = {
+				border = "rounded",
+				source = "if_many",
+			},
+		})
+
 		mason_lspconfig.setup({
 			ensure_installed = {
 				"lua_ls",
