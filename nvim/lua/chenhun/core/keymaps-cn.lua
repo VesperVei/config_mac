@@ -1,5 +1,39 @@
 local keymap = vim.keymap.set
 
+local function register_which_key_zh()
+	local ok, which_key = pcall(require, "which-key")
+	if not ok then
+		return false
+	end
+
+	which_key.add({
+		{ "af", desc = "选择函数外层", mode = { "o", "x" } },
+		{ "if", desc = "选择函数内层", mode = { "o", "x" } },
+		{ "ac", desc = "选择类外层", mode = { "o", "x" } },
+		{ "ic", desc = "选择类内层", mode = { "o", "x" } },
+		{ "aa", desc = "选择参数外层", mode = { "o", "x" } },
+		{ "ia", desc = "选择参数内层", mode = { "o", "x" } },
+		{ "]m", desc = "跳到下一个函数开始" },
+		{ "]M", desc = "跳到下一个函数结束" },
+		{ "[m", desc = "跳到上一个函数开始" },
+		{ "[M", desc = "跳到上一个函数结束" },
+		{ "]]", desc = "跳到下一个类开始" },
+		{ "][", desc = "跳到下一个类结束" },
+		{ "[[", desc = "跳到上一个类开始" },
+		{ "[]", desc = "跳到上一个类结束" },
+	})
+
+	return true
+end
+
+if not register_which_key_zh() then
+	vim.api.nvim_create_autocmd("User", {
+		pattern = "VeryLazy",
+		once = true,
+		callback = register_which_key_zh,
+	})
+end
+
 -- ======================
 -- General（通用）
 -- ======================
@@ -52,6 +86,9 @@ keymap("n", "<leader>ps", require("chenhun.core.python_venv").show_session_statu
 	desc = "查看当前 Neovim 的 Python/LSP 状态",
 })
 
+-- ======================
+-- Treesitter Textobjects（语法对象）
+-- ======================
 -- ======================
 -- File Explorer（文件树）
 -- ======================

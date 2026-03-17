@@ -12,7 +12,7 @@ return {
 			sync_root_with_cwd = true,
 			respect_buf_cwd = true,
 			view = {
-				width = 35,
+				width = 28,
 				relativenumber = true,
 				-- 让侧边栏浮动感更强
 				side = "left",
