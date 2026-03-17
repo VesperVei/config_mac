@@ -26,6 +26,18 @@ return {
         enabled = true,
         view = "cmdline_popup",
       },
+      popupmenu = {
+        enabled = true,
+        backend = "nui",
+      },
+      messages = {
+        enabled = true,
+        view = "notify",
+        view_error = "notify",
+        view_warn = "notify",
+        view_history = "messages",
+        view_search = "virtualtext",
+      },
       views = {
         cmdline_popup = {
           position = {
@@ -38,6 +50,29 @@ return {
           },
         },
       },
+      routes = {
+        {
+          filter = {
+            event = "msg_show",
+            min_height = 12,
+          },
+          view = "split",
+        },
+        {
+          filter = {
+            event = "msg_show",
+            kind = { "", "echo", "echomsg", "lua_print" },
+          },
+          view = "notify",
+        },
+        {
+          filter = {
+            event = "notify",
+            min_height = 12,
+          },
+          view = "split",
+        },
+      },
       lsp = {
         progress = { enabled = true },
         hover = { enabled = true },
@@ -46,7 +81,7 @@ return {
       },
       presets = {
         bottom_search = true,
-        command_palette = false,
+        command_palette = true,
         long_message_to_split = true,
         inc_rename = false,
         lsp_doc_border = true,

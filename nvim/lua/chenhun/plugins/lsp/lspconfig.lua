@@ -8,10 +8,10 @@ return {
 	},
 	config = function()
 		local lspconfig = require("lspconfig")
-		local mason_lspconfig = require("mason-lspconfig")
+		local lspconfig_util = require("lspconfig.util")
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
-		-- ✅ 1. 导入你的虚拟环境管理模块
+		-- Python venv 模块是 Pyright 的唯一环境状态来源。
 		local python_venv = require("chenhun.core.python_venv")
 
 		local keymap = vim.keymap
@@ -21,6 +21,12 @@ return {
 			group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 			callback = function(ev)
 				local opts = { buffer = ev.buf, silent = true }
+				local client = vim.lsp.get_client_by_id(ev.data.client_id)
+
+				if client and client.name == "pyright" then
+					python_venv.on_pyright_attach(ev.buf)
+				end
+
 				keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts)
 				keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
 				keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
@@ -63,61 +69,83 @@ return {
 			},
 		})
 
-		mason_lspconfig.setup({
-			ensure_installed = {
-				"lua_ls",
-				"emmet_ls",
-				"graphql",
-				"svelte",
-				"bashls",
-				"jsonls",
-				"html",
-				"ts_ls",
-				"pyright",
-			},
-			automatic_installation = true,
-		})
+		local function build_pyright_settings_for_path(path)
+			return {
+				python = vim.tbl_deep_extend("force", python_venv.get_pyright_python_settings_for_path(path), {
+					analysis = {
+						autoSearchPaths = true,
+						useLibraryCodeForTypes = true,
+						diagnosticMode = "workspace",
+					},
+				}),
+			}
+		end
 
-		-- ========== ✅ 2. 自定义 LSP 处理函数 ==========
+		local function resolve_pyright_root(bufnr)
+			local bufname = vim.api.nvim_buf_get_name(bufnr)
+			if bufname == "" then
+				return vim.fn.getcwd()
+			end
+
+			return python_venv.resolve_project_root(bufname)
+				or lspconfig_util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git")(bufname)
+				or vim.fs.dirname(vim.fs.normalize(bufname))
+		end
+
+		local function sync_pyright_client_settings(client, settings)
+			client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, settings)
+			client.settings = vim.tbl_deep_extend("force", client.settings or {}, settings)
+			client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+		end
+
+		local function start_pyright(bufnr)
+			if not vim.api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].buftype ~= "" or vim.bo[bufnr].filetype ~= "python" then
+				return
+			end
+
+			local root_dir = resolve_pyright_root(bufnr)
+			if not root_dir or root_dir == "" then
+				return
+			end
+
+			local bufname = vim.api.nvim_buf_get_name(bufnr)
+			local settings = build_pyright_settings_for_path(bufname ~= "" and bufname or root_dir)
+
+			vim.lsp.start({
+				name = "pyright",
+				cmd = { "pyright-langserver", "--stdio" },
+				root_dir = root_dir,
+				cmd_cwd = root_dir,
+				workspace_folders = {
+					{
+						uri = vim.uri_from_fname(root_dir),
+						name = root_dir,
+					},
+				},
+				capabilities = capabilities,
+				settings = settings,
+			}, {
+				bufnr = bufnr,
+				reuse_client = function(client, config)
+					if client.name ~= "pyright" then
+						return false
+					end
+
+					if client.config.root_dir ~= config.root_dir then
+						return false
+					end
+
+					sync_pyright_client_settings(client, config.settings or {})
+					return true
+				end,
+			})
+		end
+
+		-- 所有 server 只在这里注册一次，避免重复 attach 造成双诊断。
 		local handlers = {
-			-- 默认处理
 			function(server_name)
 				lspconfig[server_name].setup({
 					capabilities = capabilities,
-				})
-			end,
-
-			-- ✅ Pyright 核心适配：动态识别 venv
-			["pyright"] = function()
-				lspconfig.pyright.setup({
-					capabilities = capabilities,
-					on_new_config = function(new_config, _)
-						local python_venv = require("chenhun.core.python_venv")
-						local current = python_venv.get_current_venv()
-						local venv_base = "/Users/zaochuan/Documents/code/python/.venvs"
-
-						if current then
-							-- 1. 补全用的路径
-							new_config.settings.python.pythonPath = venv_base .. "/" .. current .. "/bin/python"
-							-- 2. ✅ 诊断/报错消除用的路径
-							new_config.settings.python.venvPath = venv_base
-							new_config.settings.python.venv = current
-						else
-							new_config.settings.python.pythonPath =
-								"/Library/Frameworks/Python.framework/Versions/3.13/bin/python3"
-							new_config.settings.python.venvPath = nil
-							new_config.settings.python.venv = nil
-						end
-					end,
-					settings = {
-						python = {
-							analysis = {
-								autoSearchPaths = true,
-								useLibraryCodeForTypes = true,
-								diagnosticMode = "workspace",
-							},
-						},
-					},
 				})
 			end,
 
@@ -132,13 +160,27 @@ return {
 					},
 				})
 			end,
+
+			["clangd"] = function()
+				lspconfig.clangd.setup({
+					capabilities = capabilities,
+					cmd = {
+						"clangd",
+						"--background-index",
+						"--clang-tidy",
+						"--completion-style=detailed",
+						"--header-insertion=never",
+					},
+					filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
+				})
+			end,
 		}
 
 		-- 启用的 LSP 列表
 		local servers = {
+			"clangd",
 			"lua_ls",
 			"ts_ls",
-			"pyright",
 			"html",
 			"cssls",
 			"graphql",
@@ -157,5 +199,20 @@ return {
 				})
 			end
 		end
+
+		-- Pyright 不能使用 lspconfig 默认的“同名 client 直接复用”策略。
+		-- 否则先打开 pwn、再打开 crypto 时，第二个项目会被挂到第一个 client 上，
+		-- 导致 workspace folders 混在一起，而解释器设置仍然停留在第一次启动的项目。
+		-- 这里改成手动启动：
+		-- 1. 只复用同一个 root_dir 的 pyright client
+		-- 2. 不同 root_dir 强制使用独立 client
+		-- 3. 同根复用时同步 settings，避免手动切换 venv 后 client 状态陈旧
+		vim.api.nvim_create_autocmd("FileType", {
+			group = vim.api.nvim_create_augroup("UserPyrightConfig", { clear = true }),
+			pattern = "python",
+			callback = function(args)
+				start_pyright(args.buf)
+			end,
+		})
 	end,
 }

@@ -6,3 +6,6 @@ Icon?
 # 忽略 tmux 插件目录，但保留 tpm 本身（用于一键部署）
 tmux/plugins/*
 !tmux/plugins/tpm/
+# python切换
+nvim/lua/chenhun/core/python_venv_map.lua
+nvim/lua/chenhun/core/python_venv.lua

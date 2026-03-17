@@ -48,6 +48,10 @@ end, {
 	desc = "退出当前 Python 虚拟环境",
 })
 
+keymap("n", "<leader>ps", require("chenhun.core.python_venv").show_session_status, {
+	desc = "查看当前 Neovim 的 Python/LSP 状态",
+})
+
 -- ======================
 -- File Explorer（文件树）
 -- ======================

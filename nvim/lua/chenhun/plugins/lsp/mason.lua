@@ -25,6 +25,7 @@ return {
 		mason_lspconfig.setup({
 			-- list of servers for mason to install
 			ensure_installed = {
+				"clangd",
 				"ts_ls",
 				"html",
 				"cssls",
@@ -36,6 +37,8 @@ return {
 				"prismals",
 				"pyright",
 			},
+			-- 由 lspconfig.lua 手动注册 server，避免 mason-lspconfig 自动启用导致重复 attach。
+			automatic_enable = false,
 		})
 		mason_tool_installer.setup({
 			ensure_installed = {
