@@ -8,6 +8,20 @@ end
 local fg = "#CBE0F0"
 local border = "#547998"
 local bg_visual = "#275378"
+local float_bg = "#112031"
+local float_bg_soft = "#0F1C2C"
+local float_border = "#4F7083"
+local float_border_soft = "#3E5D72"
+local float_title = "#79C6D9"
+local float_fg = "#D6E5EF"
+local float_fg_muted = "#8EA7B8"
+local float_fg_soft = "#7391A6"
+local float_select = "#193247"
+local float_select_soft = "#163042"
+local float_scroll = "#274456"
+local accent = "#73C7D8"
+local accent_soft = "#5FB1C5"
+local warm = "#D7A86E"
 
 tokyonight.setup({
 	style = "night",
@@ -23,22 +37,60 @@ tokyonight.setup({
 		colors.bg_visual = bg_visual
 	end,
 	on_highlights = function(hl, c)
-		-- 2. 在高亮组层面强制去掉背景色，这样不会触发插件内部的数学报错
+		-- 2. 主编辑区继续保持透明，浮窗类组件单独走一套蓝青卡片语言。
 		local comps = {
 			"Normal",
 			"NormalNC",
-			"NormalFloat",
-			"FloatBorder",
 			"MsgArea",
 			"NvimTreeNormal",
 			"NvimTreeNormalNC",
-			"TelescopeNormal",
-			"TelescopeBorder",
 			"SignColumn",
 		}
 		for _, comp in ipairs(comps) do
 			hl[comp] = { bg = "NONE" }
 		end
+
+		-- 通用浮窗卡片：深海蓝底、柔和蓝青边框、冷白正文、蓝灰次要信息。
+		hl.NormalFloat = { fg = float_fg, bg = float_bg }
+		hl.FloatBorder = { fg = float_border, bg = float_bg }
+		hl.FloatTitle = { fg = float_title, bg = float_bg, bold = true }
+
+		-- cmp 补全菜单 / 文档窗
+		hl.Pmenu = { fg = float_fg, bg = float_bg }
+		hl.PmenuSel = { fg = "#E6F4FB", bg = float_select }
+		hl.PmenuSbar = { bg = float_bg_soft }
+		hl.PmenuThumb = { bg = float_scroll }
+		hl.CmpBorder = { fg = float_border, bg = float_bg }
+		hl.CmpDoc = { fg = float_fg, bg = float_bg_soft }
+		hl.CmpDocBorder = { fg = float_border_soft, bg = float_bg_soft }
+		hl.CmpItemAbbr = { fg = float_fg }
+		hl.CmpItemAbbrMatch = { fg = accent, bold = true }
+		hl.CmpItemAbbrMatchFuzzy = { fg = accent_soft }
+		hl.CmpItemMenu = { fg = float_fg_soft, italic = true }
+		hl.CmpItemKind = { fg = accent_soft }
+		hl.CmpItemKindFunction = { fg = accent }
+		hl.CmpItemKindMethod = { fg = accent }
+		hl.CmpItemKindVariable = { fg = float_fg_muted }
+		hl.CmpItemKindField = { fg = "#88BFD0" }
+		hl.CmpItemKindModule = { fg = "#7FB5C7" }
+
+		-- Noice / Hover / Signature 统一为同一套浮窗语言。
+		hl.NoicePopup = { fg = float_fg, bg = float_bg_soft }
+		hl.NoicePopupBorder = { fg = float_border_soft, bg = float_bg_soft }
+		hl.NoicePopupTitle = { fg = float_title, bg = float_bg_soft, bold = true }
+		hl.NoicePopupmenu = { fg = float_fg, bg = float_bg }
+		hl.NoicePopupmenuSelected = { fg = "#E6F4FB", bg = float_select_soft }
+		hl.NoiceCmdlinePopup = { fg = float_fg, bg = float_bg_soft }
+		hl.NoiceCmdlinePopupBorder = { fg = float_border_soft, bg = float_bg_soft }
+		hl.NoiceCmdlinePopupTitle = { fg = float_title, bg = float_bg_soft, bold = true }
+		hl.SignaturePopup = { fg = float_fg, bg = float_bg_soft }
+		hl.SignaturePopupBorder = { fg = float_border_soft, bg = float_bg_soft }
+		hl.LspSignatureActiveParameter = { fg = warm, bold = true }
+
+		-- 让常见的工具浮窗也保持同一语言，避免界面里出现第二套风格。
+		hl.TelescopeNormal = { fg = float_fg, bg = float_bg_soft }
+		hl.TelescopeBorder = { fg = float_border_soft, bg = float_bg_soft }
+		hl.TelescopeTitle = { fg = float_title, bg = float_bg_soft, bold = true }
 	end,
 })
 

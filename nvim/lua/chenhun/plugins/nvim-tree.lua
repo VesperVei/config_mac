@@ -12,12 +12,16 @@ return {
 			sync_root_with_cwd = true,
 			respect_buf_cwd = true,
 			view = {
-				width = 28,
+				-- 行号保留给快速跳转，用更窄的宽度来平衡空间占用。
+				width = 27,
 				relativenumber = true,
-				-- 让侧边栏浮动感更强
+				number = true,
 				side = "left",
 			},
 			renderer = {
+				-- 缩小缩进宽度，同时保留连续层级线和图标。
+				indent_width = 1,
+				group_empty = true,
 				-- 开启缩进线，在透明背景下更容易看清层级
 				indent_markers = {
 					enable = true,

@@ -1,6 +1,11 @@
 return {
 	"lewis6991/gitsigns.nvim",
 	event = { "BufReadPre", "BufNewFile" },
+	cond = function()
+		-- Headless 场景不需要 Git UI 能力；同时规避受限环境里潜在的
+		-- server/socket 初始化告警，避免把无意义噪声写进 .nvimlog。
+		return #vim.api.nvim_list_uis() > 0
+	end,
 	opts = {
 		on_attach = function(bufnr)
 			local gs = package.loaded.gitsigns

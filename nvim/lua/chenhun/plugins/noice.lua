@@ -40,6 +40,7 @@ return {
       },
       views = {
         cmdline_popup = {
+          backend = "popup",
           position = {
             row = "50%",
             col = "50%",
@@ -47,6 +48,67 @@ return {
           size = {
             width = 60,
             height = "auto",
+          },
+          border = {
+            style = "rounded",
+            padding = { 0, 1 },
+          },
+          win_options = {
+            winhighlight = {
+              Normal = "NoiceCmdlinePopup",
+              FloatBorder = "NoiceCmdlinePopupBorder",
+              FloatTitle = "NoiceCmdlinePopupTitle",
+            },
+          },
+        },
+        hover_popup = {
+          backend = "popup",
+          relative = "cursor",
+          anchor = "auto",
+          position = { row = 1, col = 0 },
+          size = {
+            width = "auto",
+            height = "auto",
+            max_width = 90,
+            max_height = 16,
+          },
+          border = {
+            style = "rounded",
+            padding = { 0, 1 },
+          },
+          win_options = {
+            wrap = true,
+            linebreak = true,
+            winhighlight = {
+              Normal = "NoicePopup",
+              FloatBorder = "NoicePopupBorder",
+              FloatTitle = "NoicePopupTitle",
+            },
+          },
+        },
+        signature_popup = {
+          backend = "popup",
+          relative = "cursor",
+          anchor = "auto",
+          position = { row = 2, col = 0 },
+          size = {
+            width = "auto",
+            height = "auto",
+            max_width = 90,
+            max_height = 12,
+          },
+          border = {
+            style = "rounded",
+            padding = { 0, 1 },
+          },
+          win_options = {
+            wrap = true,
+            linebreak = true,
+            winhighlight = {
+              Normal = "NoicePopup",
+              FloatBorder = "NoicePopupBorder",
+              FloatTitle = "NoicePopupTitle",
+            },
           },
         },
       },
@@ -75,8 +137,21 @@ return {
       },
       lsp = {
         progress = { enabled = true },
-        hover = { enabled = true },
-        signature = { enabled = true },
+        hover = {
+          enabled = true,
+          view = "hover_popup",
+        },
+        signature = {
+          enabled = true,
+          view = "signature_popup",
+          auto_open = {
+            enabled = true,
+            trigger = true,
+            luasnip = false,
+            snipppets = false,
+            throttle = 150,
+          },
+        },
         message = { enabled = true },
       },
       presets = {
@@ -90,6 +165,21 @@ return {
     config = function(_, opts)
       require("noice").setup(opts)
       vim.notify = require("notify")
+
+      -- Pyright / Python 内建函数经常会返回多个 overload。
+      -- Noice 默认会把所有签名一口气展开，视觉上会像“重复提示”。
+      -- 这里收敛为只渲染当前激活签名；没有 activeSignature 时退回第一条。
+      local signature = require("noice.lsp.signature")
+      local original_format_signature = signature.format_signature
+
+      signature.format = function(self)
+        local active = (self.activeSignature or 0) + 1
+        local sig = self.signatures[active] or self.signatures[1]
+        if not sig then
+          return
+        end
+        original_format_signature(self, active, sig)
+      end
     end,
   },
 }

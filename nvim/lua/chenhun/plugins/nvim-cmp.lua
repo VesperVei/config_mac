@@ -29,6 +29,18 @@ return {
       completion = {
         completeopt = "menu,menuone,preview,noselect",
       },
+      window = {
+        completion = cmp.config.window.bordered({
+          border = "rounded",
+          winhighlight = "Normal:Pmenu,FloatBorder:CmpBorder,CursorLine:PmenuSel,Search:None",
+          scrollbar = false,
+        }),
+        documentation = cmp.config.window.bordered({
+          border = "rounded",
+          winhighlight = "Normal:CmpDoc,FloatBorder:CmpDocBorder,Search:None",
+          scrollbar = false,
+        }),
+      },
       snippet = { -- configure how nvim-cmp interacts with snippet engine
         expand = function(args)
           luasnip.lsp_expand(args.body)
