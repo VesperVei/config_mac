@@ -54,11 +54,10 @@ return {
 
 		-- 像 VSCode 一样在行尾显示诊断信息（LSP 与 nvim-lint 共用）
 		vim.diagnostic.config({
-			virtual_text = {
-				spacing = 2,
-				source = "if_many",
-				prefix = "●",
-			},
+			-- 行内 extmark 很难做出真正“悬浮卡片”的质感。
+			-- 这里关闭原生 virtual_text，改为保留 signs/underline，
+			-- 再配合下方的自动诊断浮窗，得到更统一的圆角浮层效果。
+			virtual_text = false,
 			signs = true,
 			underline = true,
 			update_in_insert = false,
@@ -66,7 +65,71 @@ return {
 			float = {
 				border = "rounded",
 				source = "if_many",
+				focusable = false,
+				header = "",
+				prefix = "",
 			},
+		})
+
+		-- 让诊断浮窗同时在普通模式和插入模式可用，但要避免和补全菜单/签名窗重叠。
+		-- 这里的策略是：有其他浮窗在前台时，诊断先让路；等界面空下来再补弹。
+		local function has_active_popup()
+			if vim.fn.pumvisible() == 1 then
+				return true
+			end
+
+			local current_win = vim.api.nvim_get_current_win()
+			for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+				if win ~= current_win then
+					local config = vim.api.nvim_win_get_config(win)
+					if config.relative ~= "" then
+						return true
+					end
+				end
+			end
+
+			return false
+		end
+
+		local function open_diagnostic_float()
+			local bufnr = vim.api.nvim_get_current_buf()
+			if vim.bo[bufnr].buftype ~= "" then
+				return
+			end
+
+			if has_active_popup() then
+				return
+			end
+
+			local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+			local diagnostics = vim.diagnostic.get(bufnr, { lnum = line })
+			if vim.tbl_isempty(diagnostics) then
+				return
+			end
+
+			vim.diagnostic.open_float(bufnr, {
+				scope = "line",
+				focusable = false,
+				close_events = { "CursorMoved", "CursorMovedI", "InsertEnter", "BufLeave", "WinLeave" },
+				border = "rounded",
+				source = "if_many",
+				header = "",
+				prefix = "",
+			})
+		end
+
+		vim.opt.updatetime = math.min(vim.o.updatetime, 180)
+
+		vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+			group = vim.api.nvim_create_augroup("UserDiagnosticFloat", { clear = true }),
+			callback = open_diagnostic_float,
+		})
+
+		vim.api.nvim_create_autocmd({ "CompleteDone", "InsertLeave" }, {
+			group = vim.api.nvim_create_augroup("UserDiagnosticFloatResume", { clear = true }),
+			callback = function()
+				vim.defer_fn(open_diagnostic_float, 80)
+			end,
 		})
 
 		local function build_pyright_settings_for_path(path)
@@ -76,6 +139,9 @@ return {
 						autoSearchPaths = true,
 						useLibraryCodeForTypes = true,
 						diagnosticMode = "workspace",
+						diagnosticSeverityOverrides = {
+							reportWildcardImportFromLibrary = "none",
+						},
 					},
 				}),
 			}
@@ -88,7 +154,9 @@ return {
 			end
 
 			return python_venv.resolve_project_root(bufname)
-				or lspconfig_util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git")(bufname)
+				or lspconfig_util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git")(
+					bufname
+				)
 				or vim.fs.dirname(vim.fs.normalize(bufname))
 		end
 
@@ -99,7 +167,11 @@ return {
 		end
 
 		local function start_pyright(bufnr)
-			if not vim.api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].buftype ~= "" or vim.bo[bufnr].filetype ~= "python" then
+			if
+				not vim.api.nvim_buf_is_valid(bufnr)
+				or vim.bo[bufnr].buftype ~= ""
+				or vim.bo[bufnr].filetype ~= "python"
+			then
 				return
 			end
 

@@ -54,6 +54,10 @@ tokyonight.setup({
 		hl.NormalFloat = { fg = float_fg, bg = float_bg }
 		hl.FloatBorder = { fg = float_border, bg = float_bg }
 		hl.FloatTitle = { fg = float_title, bg = float_bg, bold = true }
+		hl.DiagnosticFloatingError = { fg = "#E58C88", bg = float_bg_soft }
+		hl.DiagnosticFloatingWarn = { fg = warm, bg = float_bg_soft }
+		hl.DiagnosticFloatingInfo = { fg = accent_soft, bg = float_bg_soft }
+		hl.DiagnosticFloatingHint = { fg = "#8AC6B9", bg = float_bg_soft }
 
 		-- cmp 补全菜单 / 文档窗
 		hl.Pmenu = { fg = float_fg, bg = float_bg }
@@ -83,14 +87,16 @@ tokyonight.setup({
 		hl.NoiceCmdlinePopup = { fg = float_fg, bg = float_bg_soft }
 		hl.NoiceCmdlinePopupBorder = { fg = float_border_soft, bg = float_bg_soft }
 		hl.NoiceCmdlinePopupTitle = { fg = float_title, bg = float_bg_soft, bold = true }
-		hl.SignaturePopup = { fg = float_fg, bg = float_bg_soft }
-		hl.SignaturePopupBorder = { fg = float_border_soft, bg = float_bg_soft }
 		hl.LspSignatureActiveParameter = { fg = warm, bold = true }
 
 		-- 让常见的工具浮窗也保持同一语言，避免界面里出现第二套风格。
 		hl.TelescopeNormal = { fg = float_fg, bg = float_bg_soft }
 		hl.TelescopeBorder = { fg = float_border_soft, bg = float_bg_soft }
 		hl.TelescopeTitle = { fg = float_title, bg = float_bg_soft, bold = true }
+
+		-- 行内诊断插件已停用；保留这些组不会影响显示，但主诊断体验改由圆角浮窗承担。
+		hl.TinyInlineBackground = { fg = float_fg, bg = float_bg_soft }
+		hl.TinyInlineArrow = { fg = accent_soft, bg = "NONE" }
 	end,
 })
 
