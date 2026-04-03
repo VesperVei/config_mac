@@ -9,3 +9,5 @@ tmux/plugins/*
 # python切换
 nvim/lua/chenhun/core/python_venv_map.lua
 nvim/lua/chenhun/core/python_venv.lua
+
+*log
