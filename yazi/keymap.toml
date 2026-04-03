@@ -129,8 +129,8 @@ keymap = [
 	{ on = [ "g", "d" ],       run = "cd ~/Downloads",              desc = "跳转到下载目录" },
 	{ on = [ "g", "<Space>" ], run = "cd --interactive",            desc = "交互式跳转" },
 	{ on = [ "g", "f" ],       run = "follow",                      desc = "跳转到软链接所指原路径" },
-  { on = [ "g", "c" ],       run = "cd ~/Documents/code",         desc = "跳转到code目录"}
-  { on = [ "g", "p" ],       run = "cd ~/Documents/code/python",  desc = "跳转到python项目目录"}
+  { on = [ "g", "c" ],       run = "cd ~/Documents/code",         desc = "跳转到code目录"},
+  { on = [ "g", "p" ],       run = "cd ~/Documents/code/python",  desc = "跳转到python项目目录"},
 
 
 	# 标签页 (Tabs)
