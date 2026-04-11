@@ -348,3 +348,37 @@ require("lazy").load({ plugins = { "vim-maximizer" } })
 keymap("n", "<leader>sm", "<cmd>MaximizerToggle<CR>", {
 	desc = "最大化 / 还原当前窗口",
 })
+
+-- ======================
+-- Git Conflict（Git 冲突处理）
+-- ======================
+keymap("n", "<leader>go", "<cmd>GitConflictChooseOurs<CR>", {
+	desc = "冲突块选择当前分支版本（ours）",
+})
+
+keymap("n", "<leader>gt", "<cmd>GitConflictChooseTheirs<CR>", {
+	desc = "冲突块选择目标分支版本（theirs）",
+})
+
+keymap("n", "<leader>gb", "<cmd>GitConflictChooseBoth<CR>", {
+	desc = "冲突块同时保留双方内容",
+})
+
+keymap("n", "<leader>g0", "<cmd>GitConflictChooseNone<CR>", {
+	desc = "冲突块清空双方内容",
+})
+
+-- 这里是你的定制化行为，不完全等同于 git-conflict 插件原始默认行为。
+-- 原插件的前后跳转只负责移动到冲突块；这里保留插件原始跳转能力，
+-- 但在跳转后追加 `zt7<C-y>`，先把当前光标行置顶，再向上回卷 7 行，
+-- 也就是给顶部留出 7 行上下文空间。这样既能沿用插件自己的落点，
+-- 又能让后续冲突内容尽量完整地留在视野里。
+keymap("n", "<leader>gn", "<Plug>(git-conflict-next-conflict)zt7<C-y>", {
+	remap = true,
+	desc = "跳转到下一个 Git 冲突块，并在顶部保留 7 行上下文",
+})
+
+keymap("n", "<leader>gp", "<Plug>(git-conflict-prev-conflict)zt7<C-y>", {
+	remap = true,
+	desc = "跳转到上一个 Git 冲突块，并在顶部保留 7 行上下文",
+})
