@@ -32,6 +32,7 @@ local cache = {
 	current = nil,
 	current_python_path = config.default_bin,
 	current_project_root = nil,
+	manual_fallback = nil,
 	project_overrides = {},
 	notified_projects = {},
 }
@@ -135,19 +136,59 @@ local function has_active_pyright()
 	return #vim.lsp.get_clients({ name = "pyright" }) > 0
 end
 
-local function restart_pyright()
-	if not has_active_pyright() then
-		return
+local function build_pyright_python_settings(state)
+	local python_settings = {
+		pythonPath = state.python_path,
+	}
+
+	if state.venv_name then
+		python_settings.venvPath = config.venv_root
+		python_settings.venv = state.venv_name
 	end
 
-	-- 手动切换虚拟环境时，需要让已启动的 Pyright 重新读取 settings。
-	-- 这里保留全量重启，因为用户主动切换意味着允许当前所有 Python 项目一起刷新。
-	vim.schedule(function()
-		local ok = pcall(vim.cmd, "LspRestart! pyright")
-		if not ok then
-			pcall(vim.cmd, "LspRestart!")
+	return python_settings
+end
+
+local function is_client_in_state_scope(client, state)
+	local root_dir = normalize_path((client.config or {}).root_dir)
+	if not root_dir then
+		return false
+	end
+
+	local project_root = normalize_path(state.project_root)
+	if project_root then
+		return root_dir == project_root or root_dir:sub(1, #project_root + 1) == project_root .. "/"
+	end
+
+	local target_dir = normalize_path(state.target_dir)
+	if target_dir then
+		return root_dir == target_dir or target_dir:sub(1, #root_dir + 1) == root_dir .. "/"
+	end
+
+	return false
+end
+
+local function sync_active_pyright_settings(state)
+	local next_settings = {
+		python = build_pyright_python_settings(state),
+	}
+
+	for _, client in ipairs(vim.lsp.get_clients({ name = "pyright" })) do
+		if is_client_in_state_scope(client, state) then
+			client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, next_settings)
+			client.settings = vim.tbl_deep_extend("force", client.settings or {}, next_settings)
+			client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
 		end
-	end)
+	end
+end
+
+local function restart_pyright(state)
+	-- Do not stop/restart Pyright from the venv module. New buffers receive
+	-- settings from get_pyright_python_settings_for_path(), and current Neovim
+	-- process shutdown naturally owns client cleanup.
+	if state then
+		sync_active_pyright_settings(state)
+	end
 end
 
 local function resolve_project_root(path)
@@ -173,6 +214,14 @@ end
 local function resolve_venv_name(path)
 	local project_root = resolve_project_root(path)
 	if not project_root then
+		if cache.manual_fallback == "system" then
+			return nil, nil
+		end
+
+		if cache.manual_fallback and cache.manual_fallback ~= "" then
+			return cache.manual_fallback, nil
+		end
+
 		return nil, nil
 	end
 
@@ -189,11 +238,13 @@ end
 
 local function build_state_for_path(path)
 	local target_path = path or get_current_path()
+	local target_dir = path_to_directory(target_path)
 	local venv_name, project_root = resolve_venv_name(target_path)
 
 	if not venv_name then
 		return {
 			project_root = project_root,
+			target_dir = target_dir,
 			venv_name = nil,
 			python_path = config.default_bin,
 			venv_path = nil,
@@ -204,6 +255,7 @@ local function build_state_for_path(path)
 	if not file_exists(python_bin) then
 		return {
 			project_root = project_root,
+			target_dir = target_dir,
 			venv_name = nil,
 			python_path = config.default_bin,
 			venv_path = nil,
@@ -212,6 +264,7 @@ local function build_state_for_path(path)
 
 	return {
 		project_root = project_root,
+		target_dir = target_dir,
 		venv_name = venv_name,
 		python_path = python_bin,
 		venv_path = get_venv_path(venv_name),
@@ -246,7 +299,7 @@ local function apply_state(state, opts)
 	refresh_lualine()
 
 	if (changed or opts.force_refresh) and opts.restart then
-		restart_pyright()
+		restart_pyright(state)
 	end
 
 	if opts.notify and state.venv_name and changed then
@@ -275,18 +328,26 @@ function M.get_current_python_path()
 	return cache.current_python_path or config.default_bin
 end
 
+function M.get_pyright_client_name()
+	return "pyright"
+end
+
+function M.is_managed_pyright_client(client)
+	return client and client.name == "pyright"
+end
+
+function M.register_managed_pyright(_root_dir, _client_id)
+	-- Compatibility shim for lspconfig.lua. Client lifecycle is intentionally unmanaged here.
+end
+
+function M.cleanup_ghost_pyright(_bufnr)
+	-- Do not detach/stop Pyright clients; a new Neovim process owns its own LSP lifecycle.
+	return false
+end
+
 function M.get_pyright_python_settings_for_path(path)
 	local state = build_state_for_path(path)
-	local python_settings = {
-		pythonPath = state.python_path,
-	}
-
-	if state.venv_name then
-		python_settings.venvPath = config.venv_root
-		python_settings.venv = state.venv_name
-	end
-
-	return python_settings
+	return build_pyright_python_settings(state)
 end
 
 function M.get_pyright_python_settings()
@@ -303,6 +364,9 @@ function M.set_venv(venv_name, opts)
 	}, opts or {})
 
 	local project_root = resolve_project_root(opts.path)
+	local target_dir = path_to_directory(opts.path)
+	cache.manual_fallback = venv_name or "system"
+
 	if project_root then
 		cache.project_overrides[project_root] = venv_name or "system"
 	end
@@ -317,6 +381,7 @@ function M.set_venv(venv_name, opts)
 
 		state = {
 			project_root = project_root,
+			target_dir = target_dir,
 			venv_name = venv_name,
 			python_path = python_bin,
 			venv_path = get_venv_path(venv_name),
@@ -324,6 +389,7 @@ function M.set_venv(venv_name, opts)
 	else
 		state = {
 			project_root = project_root,
+			target_dir = target_dir,
 			venv_name = nil,
 			python_path = config.default_bin,
 			venv_path = nil,

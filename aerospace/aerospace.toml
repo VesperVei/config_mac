@@ -256,6 +256,4 @@ run = "move-node-to-workspace W"
 if.app-id = 'com.adobe.Photoshop'
 run = "move-node-to-workspace P"
 
-[[on-window-detected]] # 微软PPT
-if.add-id = 'com.microsoft.Powerpoint'
-run = "move-node-to-workspace W"
+
