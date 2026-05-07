@@ -1,37 +1,51 @@
 #!/bin/bash
 set -e
 
-DOTFILES_DIR="$HOME/.myutils/dotfiles"
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIGS=("nvim" "aerospace" "sketchybar" "kitty" "tmux" "yazi")
 BACKUP_DIR="$HOME/.config/config_backup_$(date +%Y%m%d_%H%M%S)"
 
+print_config_list() {
+  echo "本次配置清单："
+  for config in "${CONFIGS[@]}"; do
+    SOURCE="$DOTFILES_DIR/$config"
+    if [ -e "$SOURCE" ]; then
+      echo "  - $config"
+    else
+      echo "  - $config（仓库中不存在，将跳过）"
+    fi
+  done
+  echo
+}
+
 print_menu() {
+  print_config_list
   echo "=============================="
   echo " Dotfiles Setup"
   echo "=============================="
   echo "1) Install / Deploy (创建软链接)"
-  echo "2) Update (git pull)"
-  echo "3) Uninstall (移除软链接)"
+  echo "2) Uninstall (移除软链接)"
   echo "q) Quit"
   echo "=============================="
 }
 
 install_configs() {
   echo "🚀 开始部署 dotfiles..."
+  mkdir -p "$HOME/.config"
 
   for config in "${CONFIGS[@]}"; do
     TARGET="$HOME/.config/$config"
     SOURCE="$DOTFILES_DIR/$config"
 
     if [ ! -e "$SOURCE" ]; then
-      echo "⚠️ 跳过 $config（dotfiles 中不存在）"
+      echo "⚠️ 跳过 $config（仓库中不存在）"
       continue
     fi
 
     # 已存在且是软链接
     if [ -L "$TARGET" ]; then
       LINK_TARGET="$(readlink "$TARGET")"
-      if [ "$LINK_TARGET" == "$SOURCE" ]; then
+      if [ "$LINK_TARGET" = "$SOURCE" ]; then
         echo "✅ $config 已正确链接，跳过"
         continue
       else
@@ -50,13 +64,6 @@ install_configs() {
   done
 
   echo "✨ 安装完成"
-}
-
-update_configs() {
-  echo "🔄 更新 dotfiles..."
-  cd "$DOTFILES_DIR"
-  git pull
-  echo "✅ 更新完成（软链接无需变更）"
 }
 
 uninstall_configs() {
@@ -83,16 +90,13 @@ uninstall_configs() {
 
 while true; do
   print_menu
-  read -rp "请选择操作 [1/2/3/q]: " choice
+  read -rp "请选择操作 [1/2/q]: " choice
 
   case "$choice" in
     1)
       install_configs
       ;;
     2)
-      update_configs
-      ;;
-    3)
       uninstall_configs
       ;;
     q|Q)
@@ -106,4 +110,3 @@ while true; do
 
   echo
 done
-
