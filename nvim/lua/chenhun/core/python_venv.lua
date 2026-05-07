@@ -8,13 +8,19 @@
 
 local M = {}
 
+local home = vim.loop.os_homedir() or ""
+local python3 = vim.fn.exepath("python3")
+
 local config = {
-	venv_root = "/Users/zaochuan/Documents/code/python/.venvs",
-	default_bin = "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+	venv_root = vim.env.CHENHUN_PYTHON_VENV_ROOT or (home .. "/.virtualenvs"),
+	default_bin = python3 ~= "" and python3 or "python3",
 	icon = "🐍 ",
 }
 
-local raw_project_venv_map = require("chenhun.core.python_venv_map")
+local ok, raw_project_venv_map = pcall(require, "chenhun.core.python_venv_map")
+if not ok or type(raw_project_venv_map) ~= "table" then
+	raw_project_venv_map = {}
+end
 
 local project_venv_map = {}
 local project_roots = {}

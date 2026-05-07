@@ -66,6 +66,34 @@ git pull
 
 ---
 
+## 🐍 Python 虚拟环境映射（可选）
+
+Neovim 配置支持按项目路径自动切换 Python 虚拟环境。该映射属于本地私有配置，默认不提交到仓库。
+
+如需启用，可参考示例文件创建自己的映射：
+
+```bash
+cp nvim/lua/chenhun/core/python_venv_map.example.lua nvim/lua/chenhun/core/python_venv_map.lua
+```
+
+然后按需修改：
+
+```lua
+return {
+	["/path/to/project"] = "venv_name",
+}
+```
+
+默认虚拟环境根目录是 `~/.virtualenvs`。如需自定义，可设置环境变量：
+
+```bash
+export CHENHUN_PYTHON_VENV_ROOT="/path/to/.venvs"
+```
+
+如果没有创建 `python_venv_map.lua`，Neovim 也会正常启动，只是不启用项目路径映射。
+
+---
+
 ## 📂 目录结构
 
 ```text
