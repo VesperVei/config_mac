@@ -1,45 +1,61 @@
 return {
   "nvim-treesitter/nvim-treesitter",
-  event = { "BufReadPre", "BufNewFile" },
+  branch = "main",
+  lazy = false,
   build = ":TSUpdate",
-  config = function()
-    -- import nvim-treesitter plugin
-    local treesitter = require("nvim-treesitter.configs")
+  init = function()
+    vim.api.nvim_create_autocmd("FileType", {
+      callback = function(args)
+        pcall(vim.treesitter.start, args.buf)
 
-    -- configure treesitter
-    treesitter.setup({ -- enable syntax highlighting
-      highlight = {
-        enable = true,
-      },
-      -- enable indentation
+        local ok, treesitter = pcall(require, "nvim-treesitter")
+        if ok and type(treesitter.indentexpr) == "function" then
+          vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end
+      end,
+    })
+  end,
+  config = function()
+    local treesitter = require("nvim-treesitter")
+    local parsers = {
+      "json",
+      "javascript",
+      "typescript",
+      "tsx",
+      "yaml",
+      "html",
+      "css",
+      "prisma",
+      "markdown",
+      "markdown_inline",
+      "svelte",
+      "graphql",
+      "bash",
+      "lua",
+      "vim",
+      "dockerfile",
+      "gitignore",
+      "query",
+      "vimdoc",
+      "c",
+      "python",
+      "toml",
+      "regex",
+    }
+
+    if type(treesitter.install) == "function" then
+      treesitter.setup({
+        install_dir = vim.fn.stdpath("data") .. "/site",
+      })
+
+      treesitter.install(parsers)
+      return
+    end
+
+    require("nvim-treesitter.configs").setup({
+      highlight = { enable = true },
       indent = { enable = true },
-      -- ensure these language parsers are installed
-      ensure_installed = {
-        "json",
-        "javascript",
-        "typescript",
-        "tsx",
-        "yaml",
-        "html",
-        "css",
-        "prisma",
-        "markdown",
-        "markdown_inline",
-        "svelte",
-        "graphql",
-        "bash",
-        "lua",
-        "vim",
-        "dockerfile",
-        "gitignore",
-        "query",
-        "vimdoc",
-        "c",
-        "python",
-        "toml",
-        "regex",
-        "comment",
-      },
+      ensure_installed = parsers,
       incremental_selection = {
         enable = true,
         keymaps = {
