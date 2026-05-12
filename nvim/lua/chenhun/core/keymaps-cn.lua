@@ -61,12 +61,20 @@ keymap("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "当前文件在新标�
 -- ======================
 -- Auto Session（会话管理）
 -- ======================
-keymap("n", "<leader>wr", "<cmd>SessionRestore<CR>", {
+keymap("n", "<leader>wr", "<cmd>AutoSession restore<CR>", {
 	desc = "恢复当前目录的会话",
 })
 
-keymap("n", "<leader>ws", "<cmd>SessionSave<CR>", {
-	desc = "保存当前工作区会话",
+keymap("n", "<leader>ws", "<cmd>AutoSession save<CR>", {
+	desc = "保存当前目录的会话",
+})
+
+keymap("n", "<leader>wf", "<cmd>AutoSession search<CR>", {
+	desc = "搜索、恢复或删除已保存会话",
+})
+
+keymap("n", "<leader>wa", "<cmd>AutoSession toggle<CR>", {
+	desc = "切换会话自动保存",
 })
 
 -- ======================
