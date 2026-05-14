@@ -30,3 +30,16 @@ keymap.set("n", "<leader>tx", "<cmd>tabclose<CR>", { desc = "Close current tab" 
 keymap.set("n", "<leader>tn", "<cmd>tabn<CR>", { desc = "Go to next tab" }) --  go to next tab
 keymap.set("n", "<leader>tp", "<cmd>tabp<CR>", { desc = "Go to previous tab" }) --  go to previous tab
 keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer in new tab" }) --  move current buffer to new tab
+
+-- breadcrumbs / winbar navigation
+keymap.set("n", "<leader>;", function()
+  require("dropbar.api").pick()
+end, { desc = "Pick symbols in winbar" })
+
+keymap.set("n", "[;", function()
+  require("dropbar.api").goto_context_start()
+end, { desc = "Go to start of current context" })
+
+keymap.set("n", "];", function()
+  require("dropbar.api").select_next_context()
+end, { desc = "Select next context" })

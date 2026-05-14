@@ -97,6 +97,28 @@ keymap("n", "<leader>ps", require("chenhun.core.python_venv").show_session_statu
 -- ======================
 -- Treesitter Textobjects（语法对象）
 -- ======================
+
+-- ======================
+-- Dropbar（面包屑导航）
+-- ======================
+keymap("n", "<leader>;", function()
+	require("dropbar.api").pick()
+end, {
+	desc = "选择 winbar 中的符号",
+})
+
+keymap("n", "[;", function()
+	require("dropbar.api").goto_context_start()
+end, {
+	desc = "跳到当前上下文开头",
+})
+
+keymap("n", "];", function()
+	require("dropbar.api").select_next_context()
+end, {
+	desc = "选择下一个上下文",
+})
+
 -- ======================
 -- File Explorer（文件树）
 -- ======================
