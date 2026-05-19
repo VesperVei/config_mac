@@ -36,7 +36,7 @@ tokyonight.setup({
 		colors.fg = fg
 		colors.bg_visual = bg_visual
 	end,
-	on_highlights = function(hl, c)
+		on_highlights = function(hl, c)
 		-- 2. 主编辑区继续保持透明，浮窗类组件单独走一套蓝青卡片语言。
 		local comps = {
 			"Normal",
@@ -49,6 +49,16 @@ tokyonight.setup({
 		for _, comp in ipairs(comps) do
 			hl[comp] = { bg = "NONE" }
 		end
+
+		-- Dropbar lives in winbar; keep the bar transparent so devicons do not
+		-- inherit a dark cell background when opened from Telescope.
+		hl.WinBar = { fg = float_fg, bg = "NONE" }
+		hl.WinBarNC = { fg = float_fg, bg = "NONE" }
+		hl.DropBarKindFile = { fg = float_fg, bg = "NONE" }
+		hl.DropBarKindDir = { fg = accent_soft, bg = "NONE" }
+		hl.DropBarIconKindFile = { bg = "NONE" }
+		hl.DropBarIconKindFolder = { fg = accent_soft, bg = "NONE" }
+		hl.DropBarIconUISeparator = { fg = float_fg_soft, bg = "NONE" }
 
 		-- 通用浮窗卡片：深海蓝底、柔和蓝青边框、冷白正文、蓝灰次要信息。
 		hl.NormalFloat = { fg = float_fg, bg = float_bg }

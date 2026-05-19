@@ -412,3 +412,13 @@ keymap("n", "<leader>gp", "<Plug>(git-conflict-prev-conflict)zt7<C-y>", {
 	remap = true,
 	desc = "跳转到上一个 Git 冲突块，并在顶部保留 7 行上下文",
 })
+-- ======================
+-- vim suda（nvim获取 sudo 权限）
+-- ======================
+
+keymap("n", "<leader>sw", "<cmd>SudaWrite<CR>", {
+	desc = "sudo写权限",
+})
+keymap("n", "<leader>sr", "<cmd>SudaRead<CR>", {
+	desc = "sudo读权限",
+})
